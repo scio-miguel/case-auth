@@ -48,10 +48,10 @@ router.get(
   }),
   (req, res, next) => {
     console.log("Authenticated with MAGIC LINK");
-    res.send("Authenticated with MAGIC LINK");
+    console.log(req.query);
     User.findOne({
       where: {
-        username: req.params.username,
+        username: req.query.username,
       },
     })
       .then(function (user) {
@@ -68,7 +68,7 @@ router.get(
         });
       })
       .catch((err) => {
-        next(done(err));
+        next(err);
       });
   }
 );
@@ -77,7 +77,7 @@ router.post(
   "/magiclink",
   passport.authenticate("magiclink", {
     action: "requestToken",
-    userPrimaryKey: "id",
+    // userPrimaryKey: "id",
   }),
   (req, res) =>
     res.status(200).json({
