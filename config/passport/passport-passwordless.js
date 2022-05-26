@@ -1,50 +1,50 @@
 const MagicLinkStrategy = require("passport-magic-link").Strategy;
-const fs = require("fs");
-const path = require("path");
 const db = require("../database");
 const User = db.users;
+const utils = require("../../lib/utils");
+require("dotenv").config();
 
-const pathToKey = path.join(__dirname, "../..", "id_rsa_pub.pem");
-const PUB_KEY = fs.readFileSync(pathToKey, "utf8");
+const MAGICLINK_SECRET = process.env.MAGICLINK_SECRET;
+const WEB_PORTAL_MAGICLINK = process.env.FE_MAGICLINK;
 
 const options = {
-  secret: PUB_KEY,
+  secret: MAGICLINK_SECRET,
   userFields: ["username"],
   tokenField: "token",
+  verifyUserAfterToken: true,
+  ttl: 10,
 };
 
 module.exports = (passport) => {
   passport.use(
     new MagicLinkStrategy(
       options,
-      (user, token) => {
-        console.log(token);
+      async (user, token) => {
+        const userFound = await User.findOne({
+          where: { username: user.username },
+        });
+        const link =
+          WEB_PORTAL_MAGICLINK +
+          "?username=" +
+          user.username +
+          "&token=" +
+          token;
+        utils.sendSMS(userFound.dataValues.phone_number, link);
+        return link;
+      },
+      function verify(user) {
         User.findOne({
           where: {
             username: user.username,
           },
         })
-          .then(function (userFound) {
-            if (!userFound) {
-              return done(err, false);
-            }
-            return done(null, token);
-          })
-          .catch((err) => done(err, false));
-      },
-      (user) => {
-        User.findOne({
-          where: {
-            id: user.id,
-          },
-        })
-          .then(function (user) {
+          .then((user) => {
             if (!user) {
-              return done(err, false);
+              return "User not found";
             }
-            return done(null, user.dataValues);
+            return user;
           })
-          .catch((err) => done(err, false));
+          .catch((err) => console.log(err));
       }
     )
   );
