@@ -6,6 +6,7 @@ const db = require("../database");
 const User = db.users;
 
 const pathToKey = path.join(__dirname, "../..", "id_rsa_pub.pem");
+console.log(pathToKey);
 const PUB_KEY = fs.readFileSync(pathToKey, "utf8");
 
 const options = {
