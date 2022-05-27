@@ -12,7 +12,6 @@ const options = {
   userFields: ["username"],
   tokenField: "token",
   verifyUserAfterToken: true,
-  // ttl: 100,
 };
 
 module.exports = (passport) => {
